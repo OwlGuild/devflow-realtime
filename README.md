@@ -1,3 +1,2 @@
 # devflow-realtime
-
-Minimal skeleton. Add real code locally with correct git identity.
+WebSocket layer for DevFlow realtime updates. Part of OwlGuild/DevFlow.
