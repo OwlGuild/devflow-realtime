@@ -9,6 +9,8 @@ assigned — without anyone pressing refresh.
 [![WebSocket](https://img.shields.io/badge/transport-ws-0078d4.svg)](https://developer.mozilla.org/en-US/docs/Web/API/WebSockets_API)
 [![License: MIT](https://img.shields.io/badge/license-MIT-yellow.svg)](LICENSE)
 
+**Live:** `wss://devflow-realtime.onrender.com`
+
 ## Why this exists
 
 Polling wastes requests and still lags. Every open client should see the same board at roughly
