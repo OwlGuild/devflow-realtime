@@ -15,4 +15,4 @@ wss.on('connection', (ws) => {
   });
 });
 
-console.log(devflow-realtime running on :);
+console.log(`devflow-realtime listening on :${port}`);
