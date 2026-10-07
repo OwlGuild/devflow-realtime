@@ -21,6 +21,9 @@ the same time, and the connection should recover cleanly when it drops.
 - Accepts connections and greets the client with a `connected` frame
 - Echoes JSON frames back with a typed envelope (`echo`), so consumers never parse raw payloads
 - Rejects malformed frames with an `error` frame instead of dropping the socket
+- Caps frames at 1 MB, tracks errors per socket and heartbeats every 30s so half-open
+  connections are terminated instead of lingering
+- Shuts down cleanly on `SIGTERM`/`SIGINT` (what Render sends on redeploy)
 
 ## Stack
 
@@ -69,7 +72,7 @@ behaviour end to end:
 ```bash
 ✔ greets a new connection
 ✔ echoes a json message back
-✔ rejects invalid json without crashing
+✔ rejects invalid json and keeps serving new connections
 
 ℹ tests 3
 ℹ pass 3
@@ -90,9 +93,10 @@ Both maintainers of [OwlGuild](https://github.com/OwlGuild) commit here.
 | Area | Maintainer |
 |---|---|
 | Protocol design and event schema | [@AhmadGolbooee](https://github.com/AhmadGolbooee) |
-| Reconnect and resume logic | [@AhmadGolbooee](https://github.com/AhmadGolbooee) |
-| Presence and fan-out with Redis | shared with [@MarziehAkrami](https://github.com/MarziehAkrami) |
-| Emission points in the API | [@MarziehAkrami](https://github.com/MarziehAkrami) |
+| Server lifecycle and heartbeats | [@AhmadGolbooee](https://github.com/AhmadGolbooee) |
+| Reconnect and resume logic (planned) | [@AhmadGolbooee](https://github.com/AhmadGolbooee) |
+| Presence and fan-out with Redis (planned) | shared with [@MarziehAkrami](https://github.com/MarziehAkrami) |
+| Emission points in the API (planned) | [@MarziehAkrami](https://github.com/MarziehAkrami) |
 | CI, Docker, docs | shared |
 
 ## Related
