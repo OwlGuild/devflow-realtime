@@ -5,21 +5,20 @@ assigned — without anyone pressing refresh.
 
 [![CI](https://github.com/OwlGuild/devflow-realtime/actions/workflows/ci.yml/badge.svg)](https://github.com/OwlGuild/devflow-realtime/actions/workflows/ci.yml)
 [![Node.js](https://img.shields.io/badge/node-22-green.svg)](https://nodejs.org/)
-[![TypeScript](https://img.shields.io/badge/typescript-5.6-blue.svg)](https://www.typescriptlang.org/)
+[![TypeScript](https://img.shields.io/badge/typescript-strict-3178c6.svg)](https://www.typescriptlang.org/)
 [![WebSocket](https://img.shields.io/badge/transport-ws-0078d4.svg)](https://developer.mozilla.org/en-US/docs/Web/API/WebSockets_API)
 [![License: MIT](https://img.shields.io/badge/license-MIT-yellow.svg)](LICENSE)
 
 ## Why this exists
 
-Polling wastes requests and still lags. DevFlow needs every open client to see the same board
-at roughly the same time, and it needs to keep working when a connection drops.
+Polling wastes requests and still lags. Every open client should see the same board at roughly
+the same time, and the connection should recover cleanly when it drops.
 
-## What it guarantees
+## What it does today
 
-- **At-least-once delivery with idempotent handlers** — a duplicated event cannot double-count
-- **Resume after disconnect** — the client replays events from its last known sequence number
-- **Scoped subscriptions** — a client only receives events for workspaces it belongs to
-- **Backpressure awareness** — slow consumers are dropped from the fan-out rather than queued
+- Accepts connections and greets the client with a `connected` frame
+- Echoes JSON frames back with a typed envelope (`echo`), so consumers never parse raw payloads
+- Rejects malformed frames with an `error` frame instead of dropping the socket
 
 ## Stack
 
@@ -27,48 +26,60 @@ at roughly the same time, and it needs to keep working when a connection drops.
 |---|---|
 | Runtime | Node.js 22 |
 | Language | TypeScript, strict mode |
-| Transport | `ws` behind a small abstraction |
-| Presence | Redis for connection registries |
-| Fan-out | Redis pub/sub |
-| Contract | shared event types with `devflow-api` |
+| Transport | `ws` |
+| Tests | built-in `node:test` runner |
 
 ## Quickstart
 
 ```bash
 git clone https://github.com/OwlGuild/devflow-realtime.git
 cd devflow-realtime
-cp .env.example .env
-docker compose up --build
-pnpm dev
+npm install
+npm run dev
 ```
 
-Connects to `ws://localhost:8080`.
+Connects to `ws://localhost:8080`. Override with `PORT`.
 
 ## Protocol
 
 ```jsonc
+// server → client
+{ "type": "connected", "service": "devflow-realtime" }
+
 // client → server
-{ "type": "subscribe", "workspace": "ws_123", "last_seq": 4820 }
-{ "type": "ping" }
+{ "type": "move", "task": 42 }
 
 // server → client
-{ "type": "event", "seq": 4821, "name": "task.moved", "payload": { ... } }
-{ "type": "resume_ok", "replayed": 3 }
-{ "type": "error", "code": "not_authorized" }
+{ "type": "echo", "received": { "type": "move", "task": 42 } }
+{ "type": "error", "message": "invalid json" }
 ```
-
-Event names and payload shapes are declared once in `src/protocol/` and re-exported so the API
-and the web client cannot drift apart.
 
 ## Testing
 
 ```bash
-pnpm test        # unit
-pnpm test:load   # connection storm: 1000 clients, reconnect and resume
+npm run build
+npm test
 ```
 
-The load test is the interesting one: it disconnects every client mid-stream and asserts that
-each one resumes with no missing sequence numbers.
+Three integration tests spawn the compiled server, open a real socket and assert the wire
+behaviour end to end:
+
+```bash
+✔ greets a new connection
+✔ echoes a json message back
+✔ rejects invalid json without crashing
+
+ℹ tests 3
+ℹ pass 3
+ℹ fail 0
+```
+
+## Roadmap
+
+- `subscribe` frames scoped to a workspace, with `last_seq` replay on reconnect
+- Presence registry backed by Redis, so any instance can answer "who is here"
+- Fan-out over Redis pub/sub for horizontal scaling
+- Load test that drops every client mid-stream and asserts no sequence gaps
 
 ## Ownership
 
