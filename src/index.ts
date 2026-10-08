@@ -4,7 +4,7 @@ const MAX_PAYLOAD_BYTES = 1_000_000;
 const HEARTBEAT_MS = 30_000;
 
 const rawPort = Number.parseInt(process.env.PORT ?? '8080', 10);
-if (!Number.isInteger(rawPort) || rawPort < 1 || rawPort > 65535) {
+if (!Number.isInteger(rawPort) || rawPort < 0 || rawPort > 65535) {
   console.error(`invalid PORT: ${process.env.PORT}`);
   process.exit(1);
 }
@@ -14,7 +14,9 @@ const clients = new Set<WebSocket>();
 const awaitingPong = new Set<WebSocket>();
 
 wss.on('listening', () => {
-  console.log(`devflow-realtime listening on :${rawPort}`);
+  const address = wss.address();
+  const port = typeof address === 'object' && address ? address.port : rawPort;
+  console.log(`devflow-realtime listening on :${port}`);
 });
 
 wss.on('error', (error) => {
