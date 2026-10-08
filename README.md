@@ -21,7 +21,7 @@ the same time, and the connection should recover cleanly when it drops.
 - Accepts connections and greets the client with a `connected` frame
 - Echoes JSON frames back with a typed envelope (`echo`), so consumers never parse raw payloads
 - Rejects malformed frames with an `error` frame instead of dropping the socket
-- Caps frames at 1 MB, tracks errors per socket and heartbeats every 30s so half-open
+- Caps frames at 1 MB, logs socket errors and heartbeats every 30s so half-open
   connections are terminated instead of lingering
 - Shuts down cleanly on `SIGTERM`/`SIGINT` (what Render sends on redeploy)
 
@@ -43,7 +43,7 @@ npm install
 npm run dev
 ```
 
-Connects to `ws://localhost:8080`. Override with `PORT`.
+Connects to `ws://localhost:8080`. Override by exporting `PORT` (`.env` files are not auto-loaded; `.env.example` is a reference only).
 
 ## Protocol
 
@@ -72,7 +72,7 @@ behaviour end to end:
 ```bash
 ✔ greets a new connection
 ✔ echoes a json message back
-✔ rejects invalid json and keeps serving new connections
+✔ rejects invalid json and keeps serving the same socket
 
 ℹ tests 3
 ℹ pass 3
